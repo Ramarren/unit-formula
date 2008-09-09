@@ -120,7 +120,7 @@
 	       (mile          1609.344  (mi miles))
 	       (nautical-mile 1852.0    (nm nauticalmiles
 					    nauticalmile nautical-miles))
-	       (astronomical-unit 
+	       (astronomical-unit
 		1.49598e11 (au))
 	       (light-year    9.46e15    (ly light-years
 					     lightyear lightyears))
@@ -150,7 +150,7 @@
 
 (define-factors second (s sec secs seconds) 1.0)
 
-(import-novak-derived 
+(import-novak-derived
  ((millisecond (* milli second)     (ms msec millisec
 					milliseconds))
   (microsecond (* micro second)     (us usec microsec
@@ -170,10 +170,10 @@
   (year        (* 31556736 second)  (yr years))
   (century     (* 3155673600 second) (centuries))))
 
-(import-novak-derived 
+(import-novak-derived
  ((second-squared (* second second) (s2 s^2))))
 
-(import-novak-derived 
+(import-novak-derived
  ((hertz    (/ 1 second) (hz))
   (becquerel (/ 1 second) (bq))
   (kilohertz   (* kilo hertz)       (khz))
@@ -185,7 +185,7 @@
 (import-novak-simple ampere
 		     ((ampere      1.0       (A amp amps amperes)) ))
 
-(import-novak-derived 
+(import-novak-derived
  ((earth-gravity (* 9.80665 (/ meter (* second second))))
   (gravity (* 9.80665 (/ meter (* second second))))
   (feet-per-second-squared (/ foot (* second second))
@@ -298,7 +298,7 @@
 
 (import-novak-derived
  ((square-meter (* meter meter)
-		(m^2 m2 meter-squared meters-squared 
+		(m^2 m2 meter-squared meters-squared
 		     metersquared square-meters))
   (square-centimeter (* centimeter centimeter)
 		     (cm^2 centimetersquared
@@ -400,7 +400,7 @@
   (minim           (* 0.059194 cubic-centimeter) (minims))
   (tablespoon      (/ fluidounce 2) (tbsp tablespoons))
   (teaspoon        (/ tablespoon 3) (tsp teaspoons))
-  (barrel          (* 159 liter) (bbl))	; as in oil
+  (barrel          (* 159 liter) (bbl)) ; as in oil
   ))
 
 (import-novak-derived
@@ -507,3 +507,37 @@
 					   (* kilogram second second)))
     elementary-charge (1.6021892e-19 coulomb)
     electron-mass (9.109534e-31 kilogram))
+
+;;; define base units
+;;; those are of course not units, but close enough
+
+(define-units
+  mass               kilogram
+  length             meter
+  time               second
+  temperature        kelvin
+  current            ampere
+  substance          mole
+  luminosity         candela
+  force              (/ (* mass length) (* time time))
+  area               (* length length)
+  volume             (* length length length)
+  power              (/ (* mass length length)
+			(* time time time))
+  energy             (/ (* mass length length) (* time time))
+  speed              (/ length time)
+  acceleration       (/ length (* time time))
+  pressure           (/ force area)
+  density            (/ mass volume)
+  charge             (* current time)
+  electric-potential (/ power current)
+  electric-field     (/ force charge)
+  capacitance        (/ charge electric-potential)
+  resistance         (/ electric-potential current)
+  conductance        (/ current electric-potential)
+  magnetic-field     (/ mass (* current time time))
+  magnetic-flux      (* magnetic-field area)
+  inductance         (/ magnetic-flux current)
+  frequency          (/ 1 time)
+  time-squared       (* time time)
+  dose               (/ (* length length) (* time time)))

@@ -67,9 +67,9 @@ value, if provided, a literal constant, either a number, an unit name, or (numbe
 Example:
 
 `CL-USER> (unit-formulas:defformula K-np 
-	  			    ((effective-mass mass)
-	  			     (delta-e energy)
-				     (h-bar (/ (m m kg) s) #.(/ 6.62d-34 (* 2 pi)))
+                                    ((effective-mass mass)
+                                     (delta-e energy)
+                                     (h-bar (/ (m m kg) s) #.(/ 6.62d-34 (* 2 pi)))
 			             (f electric-field))
                (/ (/ (* 4 (sqrt (* 2 effective-mass (expt delta-e 3))))
                      (abs f))
