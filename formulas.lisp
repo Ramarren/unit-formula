@@ -25,6 +25,12 @@
   ((name :initarg :name :accessor name-of)
    (value :initarg :value :accessor value-of :initform nil :documentation "Value of constant, if constant")))
 
+(defmethod print-object ((unit variable-with-unit) stream)
+  (print-unreadable-object (unit stream :type t :identity nil)
+    (format stream "~a ~a:" (name-of unit) (factor-of unit))
+    (iter (for u in-vector (units-of unit))
+	  (format stream " ~a" u))))
+
 (defun unitify-formula-terminals (formula env)
   "Takes variable/constant bindings in env and replaces them in formula"
   (etypecase formula
@@ -71,3 +77,31 @@
 	  (if (every #'dimensionless-p args)
 	      (car args)
 	      (error "Operation ~a needs dimensionless arguments." formula)))))))
+
+;;; formula variables and constant are described by (name unit &optional value)
+(defun make-formula-environment (variable-specs)
+  (alist-hash-table
+   (iter (for spec in variable-specs)
+	 (destructuring-bind (name unit &optional (value nil)) spec
+	     (let ((unit-instance (reduce-unit unit)))
+	       (collect
+		   (cons name
+			 (make-instance 'variable-with-unit
+					:factor (factor-of unit-instance)
+					:units (units-of unit-instance)
+					:name name
+					:value value))))))))
+(defun replace-formula-terminals (formula)
+  "Take unitified environment and transform it into list passable to defun, with all units conversions in place."
+  (etypecase formula
+    (variable-with-unit
+     (if (value-of formula)
+	 (* (value-of formula) (factor-of formula))
+	 (if (= (factor-of formula) 1)
+	     (name-of formula)
+	     `(* ,(factor-of formula) ,(name-of formula)))))
+    (unit
+     (factor-of formula))
+    (list
+     (cons (car formula)
+	   (mapcar #'replace-formula-terminals (cdr formula))))))
