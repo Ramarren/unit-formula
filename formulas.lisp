@@ -31,7 +31,7 @@
 		   (iter (for op in (ensure-list ops))
 			 (collect `(setf (gethash ',op *operators*) ,kind)))))))
 
-(define-operators (+ -) :agree
+(define-operators (+ - abs) :agree
 		  * :multiply
 		  / :divide
 		  expt :expt
