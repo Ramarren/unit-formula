@@ -27,9 +27,11 @@
 
 (defmethod print-object ((unit variable-with-unit) stream)
   (print-unreadable-object (unit stream :type t :identity nil)
-    (format stream "~a ~a:" (name-of unit) (factor-of unit))
-    (iter (for u in-vector (units-of unit))
-	  (format stream " ~a" u))))
+    (format stream "~a ~a*~a " (name-of unit) (if (value-of unit)
+						  (value-of unit)
+						  1)
+	    (factor-of unit))
+    (print-unit-vector (units-of unit) stream)))
 
 (defun unitify-formula-terminals (formula env)
   "Takes variable/constant bindings in env and replaces them in formula"

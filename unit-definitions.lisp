@@ -1,19 +1,5 @@
 (in-package :unit-formulas)
 
-(defparameter *base-units*
-  (list :meter 0 :second 1 :kelvin 2 :kilogram 3 :ampere 4 :mole 5 :candela 6))
-
-(defclass unit ()
-  ((factor :accessor factor-of :initform 1 :initarg :factor)
-   (units :accessor units-of :initarg :units
-	  :initform (make-array (length *base-units*) :initial-element 0))))
-
-(defmethod print-object ((unit unit) stream)
-  (print-unreadable-object (unit stream :type t :identity nil)
-    (format stream "~a:" (factor-of unit))
-    (iter (for u in-vector (units-of unit))
-	  (format stream " ~a" u))))
-
 (defparameter *units* (make-hash-table))
 
 (iter (for (unit-keyword unit-index) on *base-units* by #'cddr)
