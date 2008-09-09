@@ -1,5 +1,6 @@
 ;;     unit-formulas - library for unit checked formula definitions
 ;;     Copyright (C) 2008 Jakub Higersberger
+;;     Copyright (c) 2004 Gordon S. Novak Jr. and The University of Texas at Austin.
 
 ;;     This program is free software; you can redistribute it and/or modify
 ;;     it under the terms of the GNU General Public License as published by
