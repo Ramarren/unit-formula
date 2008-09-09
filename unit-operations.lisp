@@ -40,6 +40,12 @@
   (:method ((unit1 unit) (unit2 t) &key (factor nil))
     (same-unit-p unit1 (reduce-unit unit2) :factor factor)))
 
+(defgeneric dimensionless-p (unit)
+  (:method ((unit unit))
+    (every #'zerop (units-of unit)))
+  (:method ((unit t))
+    (dimensionless-p (reduce-unit unit))))
+
 (defun reduce-unit (unit-description)
   (etypecase unit-description
     (null (make-instance 'unit))
