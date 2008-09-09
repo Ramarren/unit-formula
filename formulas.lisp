@@ -131,22 +131,27 @@
  and error if units don't match."
   (iter (for (name unit) in arglist)
 	(for (arg-name arg-value . arg-unit) = (assoc name args))
-	(etypecase arg-value
-	  (null (error "Missing argument ~a." name))
-	  (unit (if (same-unit-p arg-value unit)
-		    (factor-of arg-value)
-		    (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-value unit)))
-	  (number (if (same-unit-p arg-unit unit)
-		      arg-value
-		      (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-unit unit))))))
+	(collect
+	    (etypecase arg-value
+	      (null (error "Missing argument ~a." name))
+	      (unit (if (same-unit-p arg-value unit)
+			(factor-of arg-value)
+			(error "Argument ~a has wrong unit, is ~a should be ~a." name arg-value unit)))
+	      (number (let ((arg-unit (reduce-unit arg-unit)))
+			(if (same-unit-p arg-unit unit)
+			    (* arg-value (factor-of arg-unit))
+			    (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-unit unit))))))))
 
-(defmacro defformula (name (&rest in-spec) &body body)
+(defmacro defformula (name (&rest in-spec) formula-expression)
   (let ((arglist (make-argument-list in-spec))
 	(env (make-formula-environment in-spec)))
-    (let ((formula (unitify-formula-terminals body env)))
-      (verify-formula formula)
-      (with-gensyms (args internal-function)
-	`(let ((,internal-function (lambda ,(mapcar #'car arglist)
-				     ,(replace-formula-terminals formula))))
-	  (defun ,name (&rest ,args)
-	    ))))))
+    (let ((formula (unitify-formula-terminals formula-expression env)))
+      (let ((formula-units (units-of (verify-formula formula))))
+	(with-gensyms (args internal-function)
+	  `(defun ,name (&rest ,args)
+	     (labels ((,internal-function ,(mapcar #'car arglist)
+			,(replace-formula-terminals formula)))
+	       (make-instance 'unit
+			      :factor (apply (function ,internal-function)
+					     (reduce-argument-list ,args ',arglist))
+			      :units ,formula-units))))))))
