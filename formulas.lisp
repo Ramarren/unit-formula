@@ -108,8 +108,43 @@
 	   (mapcar #'replace-formula-terminals (cdr formula))))))
 
 ;;; in-spec defines variables and constant with which formula is described defformula creates a
-;;; function which takes arguments in forms (name value unit), converts them, checks if they agree
-;;; with in-spec and then plugs the numbers into the closure created by replace-formula terminals
-;;; which works on numbers directly (note argument order)
+;;; function which takes arguments in forms (name value &optional unit), converts them, checks if
+;;; they agree with in-spec and then plugs the numbers into the closure created by replace-formula
+;;; terminals which works on numbers directly (note argument order)
 
-;;; (defmacro defformula (in-spec &body body))
+;;; modification: value can be either a number, in which case it is of unit unit, or dimensionless
+;;; if not provided, or be unit instance, in which case it's factor is a value. This is returned
+;;; from formulas later.
+
+(defun make-argument-list (in-spec)
+  "Eliminate constants and sort in-spec (same thing as create env above)."
+  (sort (iter (for spec in in-spec)
+	      (destructuring-bind (name unit &optional (value nil)) spec
+		(unless value
+		  (collect (list name (reduce-unit unit))))))
+	#'string< :key #'car))
+
+(defun reduce-argument-list (args arglist)
+  "Take arguments and argument list and match them, returning a list of properly sorted argument values,
+ and error if units don't match."
+  (iter (for (name unit) in arglist)
+	(for (arg-name arg-value . arg-unit) = (assoc name args))
+	(etypecase arg-value
+	  (null (error "Missing argument ~a." name))
+	  (unit (if (same-unit-p arg-value unit)
+		    (factor-of arg-value)
+		    (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-value unit)))
+	  (number (if (same-unit-p arg-unit unit)
+		      arg-value
+		      (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-unit unit))))))
+
+(defmacro defformula (name (&rest in-spec) &body body)
+  (let ((arglist (make-argument-list in-spec))
+	(env (make-formula-environment in-spec)))
+    (let ((formula (unitify-formula-terminals body env)))
+      (verify-formula formula)
+      (with-gensyms (args internal-function)
+	`(let ((,internal-function (lambda ,(mapcar #'car arglist)
+				     ,(replace-formula-terminals formula))))
+	  (defun ,name (&rest ,args)
+	    ))))))
