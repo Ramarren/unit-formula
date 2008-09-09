@@ -59,7 +59,7 @@ value). The second form creates a named constant which will be folded into the f
 this has to literal number because this is folded at macroexpansion stage. Units in in-spec would in
 most cases be base units, which have synonym symbols with the name of what it is an unit of.
 
-Formula-expression consists of operators defined in units-formula::*operators* hash table, which
+Formula-expression consists of operators defined in `units-formula::*operators*` hash table, which
 must have directly corresponding functions defined. Other allowed expressions are: symbol, naming
 first a binding defined in in-spec, which will be replaced either by function argument or constant
 value, if provided, a literal constant, either a number, an unit name, or (number unit-definition).
