@@ -91,6 +91,7 @@
 					:units (units-of unit-instance)
 					:name name
 					:value value))))))))
+
 (defun replace-formula-terminals (formula)
   "Take unitified environment and transform it into list passable to defun, with all units conversions in place."
   (etypecase formula
@@ -105,3 +106,10 @@
     (list
      (cons (car formula)
 	   (mapcar #'replace-formula-terminals (cdr formula))))))
+
+;;; in-spec defines variables and constant with which formula is described defformula creates a
+;;; function which takes arguments in forms (name value unit), converts them, checks if they agree
+;;; with in-spec and then plugs the numbers into the closure created by replace-formula terminals
+;;; which works on numbers directly (note argument order)
+
+;;; (defmacro defformula (in-spec &body body))
