@@ -8,5 +8,6 @@
     :components ((:file "package")
 		 (:file "unit-definitions" :depends-on ("package" "unit-operations"))
 		 (:file "unit-operations" :depends-on ("package"))
-		 (:file "unit-data" :depends-on ("package" "unit-definitions"))))
+		 (:file "unit-data" :depends-on ("package" "unit-definitions"))
+		 (:file "formulas" :depends-on ("package" "unit-operations" "unit-definitions"))))
 
