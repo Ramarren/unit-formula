@@ -30,10 +30,11 @@
 
 (defgeneric same-unit-p (unit1 unit2 &key factor)
   (:method ((unit1 unit) (unit2 unit) &key (factor nil))
-    (and (every #'= (units-of unit1) (units-of unit2))
-	 (if factor
-	     (= (factor-of unit1) (factor-of unit2))
-	     t)))
+    (when (and (every #'= (units-of unit1) (units-of unit2))
+	       (if factor
+		   (= (factor-of unit1) (factor-of unit2))
+		   t))
+      unit1))
   (:method ((unit1 t) (unit2 t) &key (factor nil))
     (same-unit-p (reduce-unit unit1) unit2 :factor factor))
   (:method ((unit1 unit) (unit2 t) &key (factor nil))
