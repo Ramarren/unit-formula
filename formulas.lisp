@@ -60,7 +60,8 @@
      (let ((var (gethash formula env)))
        (if var
 	   var
-	   (let ((u (gethash formula *units*)))
+	   (let ((u (gethash (intern (symbol-name formula) (find-package :unit-formulas))
+			     *units*)))
 	     (if u
 		 u
 		 (error "Symbol ~a does name neither variable nor a constant." formula))))))
