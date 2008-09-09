@@ -52,3 +52,9 @@
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
        (t (multiply-units (mapcar #'reduce-unit unit-description)))))))
 
+(defun convert-unit (unit-from unit-to)
+  (let ((unit-from (reduce-unit unit-from))
+	(unit-to (reduce-unit unit-to)))
+    (if (same-unit-p unit-from unit-to)
+	(/ (factor-of unit-from) (factor-of unit-to))
+	:incorrect-conversion)))
