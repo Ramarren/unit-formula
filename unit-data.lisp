@@ -480,3 +480,11 @@
   (sievert (/ joule kilogram)   (sv))
   (rad     (/ gray 100)         ())
   (rem     (/ sievert 100)      ())))
+
+;;; constants as units, formula translator accepts them
+
+(define-units
+    gravitational-constant (6.6720e-11  (/ (* meter meter meter)
+					   (* kilogram second second)))
+    elementary-charge (1.6021892e-19 coulomb)
+    electron-mass (9.109534e-31 kilogram))
