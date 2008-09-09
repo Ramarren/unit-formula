@@ -54,7 +54,9 @@
      (make-instance 'unit :factor unit-description))
     (symbol
      (let ((substitution
-	    (gethash unit-description *units*)))
+	    (gethash (find-symbol (symbol-name unit-description)
+				  (load-time-value (find-package :unit-formulas) t))
+		     *units*)))
        (if substitution substitution (error "Unknown unit ~a" unit-description))))
     (list
      (case (car unit-description)
