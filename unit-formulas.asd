@@ -4,7 +4,7 @@
     :maintainer " <ramarren@cignet.higersbergernet>"
     :author " <ramarren@cignet.higersbergernet>"
     :licence "GPLv2"
-    :depends-on (:iterate :alexandria :bpm)
+    :depends-on (:iterate :alexandria)
     :components ((:file "package")
 		 (:file "unit-printer" :depends-on ("package"))
 		 (:file "unit-class" :depends-on ("package" "unit-printer"))
