@@ -44,7 +44,7 @@
 (defun sqrt-units (unit)
   (make-instance 'unit
 		 :factor (sqrt (factor-of unit))
-		 :units (map 'vector (curry #'/ 2) (units-of unit))))
+		 :units (map 'vector (rcurry #'/ 2) (units-of unit))))
 
 (defgeneric same-unit-p (unit1 unit2 &key factor)
   (:method ((unit1 unit) (unit2 unit) &key (factor nil))
