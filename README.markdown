@@ -64,6 +64,9 @@ must have directly corresponding functions defined. Other allowed expressions ar
 first a binding defined in in-spec, which will be replaced either by function argument or constant
 value, if provided, a literal constant, either a number, an unit name, or (number unit-definition).
 
+Created function returns an unit object, which can be converted to value in desired units with
+`convert-unit`, or queried directly with `query-unit`.
+
 Example:
 
 `CL-USER> (unit-formulas:defformula K-np 
@@ -77,3 +80,9 @@ Example:
 K-NP
 CL-USER> (k-np '(effective-mass 0.2 electron-mass) '(delta-e 0.8 eV) '(f 0.09 (/ V (nano m))))
 #<UNIT-FORMULAS::UNIT 24.309902549224955d0 >`
+
+Function `query-unit unit` returns a property list with unit value and exponents of base SI units
+forming an unit.
+
+Function `identify-unit unit` tries to find a quantity with the same units, and if found returns a
+keyword naming it.
