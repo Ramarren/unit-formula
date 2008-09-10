@@ -40,4 +40,3 @@
 , as only those directly defined can be."
   (iter (for q in *quantities*)
 	(finding (make-keyword q) such-that (same-unit-p unit (gethash q *units*)))))
-
