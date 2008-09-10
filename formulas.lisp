@@ -37,7 +37,8 @@
 		  expt :expt
 		  sqrt :sqrt
 		  (sin cos tan sinh cosh tanh) :dimensionless
-		  (asin acos atan asinh acosh atanh) :dimensionless)
+		  (asin acos atan asinh acosh atanh) :dimensionless
+		  (log exp) :dimensionless)
 
 (defclass variable-with-unit (unit)
   ((name :initarg :name :accessor name-of)
