@@ -34,3 +34,10 @@
 		(unless (zerop power)
 		  (collect keyword)
 		  (collect power)))))
+
+(defun identify-unit (unit)
+  "Returns a keyword designating a physical quantity the unit is of, or nil if none can be identified
+, as only those directly defined can be."
+  (iter (for q in *quantities*)
+	(finding (make-keyword q) such-that (same-unit-p unit (gethash q *units*)))))
+
