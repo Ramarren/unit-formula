@@ -31,7 +31,7 @@
 		  (collect
 		      `(let ((unit-instance (reduce-unit ',unit-definition)))
 			 (iter (for name in ',(ensure-list unit-names))
-			       (setf (gethash (intern (symbol-name name) (find-package :units-formulas))
+			       (setf (gethash (intern (symbol-name name) (find-package :unit-formulas))
 					      *units*) unit-instance)))))))
 
 (defmacro define-factors (unit &rest factor-definitions)
