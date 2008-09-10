@@ -155,11 +155,11 @@
 	    (etypecase arg-value
 	      (null (error "Missing argument ~a." name))
 	      (unit (if (same-unit-p arg-value unit)
-			(convert-unit arg-value unit)
+			(/ (factor-of arg-value) (factor-of unit))
 			(error "Argument ~a has wrong unit, is ~a should be ~a." name arg-value unit)))
 	      (number (let ((arg-unit (reduce-unit arg-unit)))
 			(if (same-unit-p arg-unit unit)
-			    (* arg-value (convert-unit arg-unit unit))
+			    (* arg-value (/ (factor-of arg-unit) (factor-of unit)))
 			    (error "Argument ~a has wrong unit, is ~a should be ~a." name arg-unit unit))))))))
 
 (defmacro defformula (name (&rest in-spec) formula-expression)
