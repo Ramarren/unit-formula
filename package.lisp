@@ -18,4 +18,5 @@
 
 (defpackage unit-formulas (:use :cl :iterate :alexandria)
 	    (:export :reduce-unit :convert-unit :same-unit-p
-		     :dimensionless-p :defformula :define-operators))
+		     :dimensionless-p :defformula :define-operators
+		     :query-unit :identify-unit))
