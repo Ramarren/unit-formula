@@ -16,6 +16,6 @@
 ;;     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-(defpackage unit-formulas (:use :cl :iterate :alexandria :bpm)
+(defpackage unit-formulas (:use :cl :iterate :alexandria)
 	    (:export :reduce-unit :convert-unit :same-unit-p
 		     :dimensionless-p :defformula :define-operators))
