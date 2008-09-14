@@ -81,7 +81,7 @@
       (let ((args (mapcar #'verify-formula (cdr formula))))
 	(ecase (gethash (car formula) *operators*)
 	  (:agree (if (reduce #'same-unit-p args)
-		      (cadr formula)
+		      (first args)
 		      (error "Units do not agree in ~a" formula)))
 	  (:multiply
 	     (multiply-units args))
