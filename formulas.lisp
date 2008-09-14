@@ -32,6 +32,7 @@
 			 (collect `(setf (gethash ',op *operators*) ,kind)))))))
 
 (define-operators
+  if :if
   (+ - abs) :agree
   * :multiply
   / :divide
@@ -78,28 +79,35 @@
   "Takes unitified formula and returns it's return unit, if correct, signals error if not."
   (if (atom formula)
       formula
-      (let ((args (mapcar #'verify-formula (cdr formula))))
-	(ecase (gethash (car formula) *operators*)
-	  (:agree (if (reduce #'same-unit-p args)
-		      (first args)
-		      (error "Units do not agree in ~a" formula)))
-	  (:multiply
-	     (multiply-units args))
-	  (:divide
-	     (divide-units args))
-	  (:expt
-	     (destructuring-bind (unit power) args
-	       (if (dimensionless-p power)
-		   (expt-units unit (factor-of power))
-		   (error "Power in expt in ~a cannot have an unit" formula))))
-	  (:sqrt
-	     (if (length= args 1)
-		 (sqrt-units (car args))
-		 (error "Cannot sqrt more that one argument in ~a." formula)))
-	  (:dimensionless
-	     (if (every #'dimensionless-p args)
-		 (car args)
-		 (error "Operation ~a needs dimensionless arguments." formula)))))))
+      (let ((kind (gethash (car formula) *operators*)))
+	(ecase kind
+	  (:if
+	      (if (reduce #'same-unit-p (mapcar #'verify-formula (cddr formula)))
+		  (third formula)
+		  (error "Units do not agree in ~a" formula)))
+	  ((:agree :multiply :divide :expt :sqrt :dimensionless)
+	     (let ((args (mapcar #'verify-formula (cdr formula))))
+	       (case kind
+		 (:agree (if (reduce #'same-unit-p args)
+			     (first args)
+			     (error "Units do not agree in ~a" formula)))
+		 (:multiply
+		    (multiply-units args))
+		 (:divide
+		    (divide-units args))
+		 (:expt
+		    (destructuring-bind (unit power) args
+		      (if (dimensionless-p power)
+			  (expt-units unit (factor-of power))
+			  (error "Power in expt in ~a cannot have an unit" formula))))
+		 (:sqrt
+		    (if (length= args 1)
+			(sqrt-units (car args))
+			(error "Cannot sqrt more that one argument in ~a." formula)))
+		 (:dimensionless
+		    (if (every #'dimensionless-p args)
+			(car args)
+			(error "Operation ~a needs dimensionless arguments." formula))))))))))
 
 ;;; formula variables and constant are described by (name unit &optional value)
 (defun make-formula-environment (variable-specs)
