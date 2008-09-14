@@ -33,6 +33,7 @@
 
 (define-operators
   if :if
+  (< > <= >=) :comparision
   (+ - abs) :agree
   * :multiply
   / :divide
@@ -82,12 +83,22 @@
       (let ((kind (gethash (car formula) *operators*)))
 	(ecase kind
 	  (:if
-	      (if (reduce #'same-unit-p (mapcar #'verify-formula (cddr formula)))
-		  (third formula)
-		  (error "Units do not agree in ~a" formula)))
-	  ((:agree :multiply :divide :expt :sqrt :dimensionless)
+	      (destructuring-bind (if-op condition true-result false-result) formula
+		;; there always must be both results for this to work
+		(assert (eql if-op 'if));;sanity check, also to suppress ignored variable warning
+		(let ((true-result-unit (verify-formula true-result))
+		      (false-result-unit (verify-formula false-result))
+		      (condition-unit (verify-formula condition)))
+		  (if (and (same-unit-p true-result-unit false-result-unit)
+			   (eql condition-unit :logical))
+		      true-result-unit
+		      (error "Units do not agree in ~a" formula)))))
+	  ((:agree :comparision :multiply :divide :expt :sqrt :dimensionless)
 	     (let ((args (mapcar #'verify-formula (cdr formula))))
 	       (case kind
+		 (:comparision (if (reduce #'same-unit-p args)
+				   :logical
+				   (error "Units do not agree in ~a" formula)))
 		 (:agree (if (reduce #'same-unit-p args)
 			     (first args)
 			     (error "Units do not agree in ~a" formula)))
