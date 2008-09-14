@@ -139,12 +139,15 @@
 ;;; if not provided, or be unit instance, in which case it's factor is a value. This is returned
 ;;; from formulas later.
 
-(defun make-argument-list (in-spec)
-  "Eliminate constants and sort in-spec (same thing as create env above)."
-  (sort (iter (for spec in in-spec)
+(defun strip-constants-from-spec (in-spec)
+  (iter (for spec in in-spec)
 	      (destructuring-bind (name unit &optional (value nil)) spec
 		(unless value
-		  (collect (list name (reduce-unit unit))))))
+		  (collect (list name (reduce-unit unit)))))))
+
+(defun make-argument-list (in-spec)
+  "Eliminate constants and sort in-spec (same thing as create env above)."
+  (sort (strip-constants-from-spec in-spec)
 	#'string< :key #'car))
 
 (defun reduce-argument-list (args arglist)
@@ -175,4 +178,19 @@
 	       (make-instance 'unit
 			      :factor (apply (function ,internal-function)
 					     (reduce-argument-list ,args ',arglist))
+			      :units ,formula-units))))))))
+
+(defmacro defformula* (name (&rest in-spec) formula-exprression)
+  (let ((arglist (strip-constants-from-spec in-spec))
+	(env (make-formula-environment in-spec)))
+    (let ((formula (unitify-formula-terminals formula-exprression env)))
+      (let ((formula-units (units-of (verify-formula formula))))
+	(with-gensyms (internal-function)
+	  `(defun ,name ,(mapcar #'car arglist)
+	     (labels ((,internal-function ,(mapcar #'car arglist)
+			,(replace-formula-terminals formula)))
+	       (make-instance 'unit
+			      :factor (,internal-function
+				       ,@(iter (for (arg unit) in arglist)
+					       (collect `(convert-unit ,arg ,unit))))
 			      :units ,formula-units))))))))
