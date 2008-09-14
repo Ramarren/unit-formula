@@ -32,3 +32,8 @@
   (print-unreadable-object (unit stream :type t :identity nil)
     (format stream "~a " (factor-of unit))
     (print-unit-vector (units-of unit) stream)))
+
+(defmethod make-load-form ((unit unit) &optional environment)
+  (declare (ignore environment))
+  `(make-instance 'unit :factor ,(factor-of unit)
+		        :units ,(units-of unit)))
