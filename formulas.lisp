@@ -181,6 +181,8 @@
 			      :units ,formula-units))))))))
 
 (defmacro defformula* (name (&rest in-spec) formula-exprression)
+  "This creates a formula using positional arguments, with much less error checking. If wrong unit
+is passed it will still fail, because symbol will be passed to the formula."
   (let ((arglist (strip-constants-from-spec in-spec))
 	(env (make-formula-environment in-spec)))
     (let ((formula (unitify-formula-terminals formula-exprression env)))
