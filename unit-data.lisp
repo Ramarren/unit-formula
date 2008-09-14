@@ -506,7 +506,8 @@
     gravitational-constant (6.6720e-11  (/ (* meter meter meter)
 					   (* kilogram second second)))
     elementary-charge (1.6021892e-19 coulomb)
-    electron-mass (9.109534e-31 kilogram))
+    electron-mass (9.109534e-31 kilogram)
+    boltzmann (1.38d-23 (/ (* m m kg) (s s K))))
 
 ;;; define base units
 ;;; those are of course not units, but close enough

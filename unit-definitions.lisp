@@ -18,8 +18,6 @@
 
 (in-package :unit-formulas)
 
-(defparameter *units* (make-hash-table))
-
 (iter (for (unit-keyword unit-index) on *base-units* by #'cddr)
       (for unit-instance = (make-instance 'unit))
       (setf (aref (units-of unit-instance) unit-index) 1)

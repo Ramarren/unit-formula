@@ -18,6 +18,8 @@
 
 (in-package :unit-formulas)
 
+(defparameter *units* (make-hash-table))
+
 (defclass unit ()
   ((factor :accessor factor-of :initform 1 :initarg :factor)
    (units :accessor units-of :initarg :units
