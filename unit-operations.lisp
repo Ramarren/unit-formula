@@ -87,11 +87,15 @@
 (defmacro make-unit (value unit-description)
   "Makes an unit object with value and unit description. The second one is not evaluated."
   (let ((unit-prototype (reduce-unit unit-description)))
-   `(make-instance 'unit
-		   :factor ,(if (= (factor-of unit-prototype) 1)
-				value
-				`(* ,(factor-of unit-prototype) ,value))
-		   :units ,(units-of unit-prototype))))
+    (if (numberp value)
+	(make-instance 'unit
+		       :factor (* (factor-of unit-prototype) value)
+		       :units (units-of unit-prototype))
+	`(make-instance 'unit
+			:factor ,(if (= (factor-of unit-prototype) 1)
+				     value
+				     `(* ,(factor-of unit-prototype) ,value))
+			:units ,(units-of unit-prototype)))))
 
 (defun convert-unit (unit-from unit-to)
   (let ((unit-from (reduce-unit unit-from))
