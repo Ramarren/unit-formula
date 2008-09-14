@@ -84,6 +84,15 @@
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
        (t (multiply-units (mapcar #'reduce-unit unit-description)))))))
 
+(defmacro make-unit (value unit-description)
+  "Makes an unit object with value and unit description. The second one is not evaluated."
+  (let ((unit-prototype (reduce-unit unit-description)))
+   `(make-instance 'unit
+		   :factor ,(if (= (factor-of unit-prototype) 1)
+				value
+				`(* ,(factor-of unit-prototype) ,value))
+		   :units ,(units-of unit-prototype))))
+
 (defun convert-unit (unit-from unit-to)
   (let ((unit-from (reduce-unit unit-from))
 	(unit-to (reduce-unit unit-to)))
