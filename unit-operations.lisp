@@ -97,9 +97,16 @@
 				     `(* ,(factor-of unit-prototype) ,value))
 			:units ,(units-of unit-prototype)))))
 
+(defparameter *convert-unit-behaviour* :error)
+
 (defun convert-unit (unit-from unit-to)
   (let ((unit-from (reduce-unit unit-from))
 	(unit-to (reduce-unit unit-to)))
     (if (same-unit-p unit-from unit-to)
 	(/ (factor-of unit-from) (factor-of unit-to))
-	:incorrect-conversion)))
+	(case *convert-unit-behaviour*
+	  (:error (error "Invalid conversion between ~a and ~a" unit-from unit-to))
+	  (:warn  (warn "Invalid conversion between ~a and ~a" unit-from unit-to)
+	     :incorrect-conversion)
+	  (t
+	   :incorrect-conversion)))))
