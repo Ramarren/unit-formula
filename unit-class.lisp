@@ -32,8 +32,11 @@
 
 (defmethod print-object ((unit unit) stream)
   (print-unreadable-object (unit stream :type t :identity nil)
-    (format stream "~a " (factor-of unit))
-    (print-unit-vector (units-of unit) stream)))
+    (let ((unit-description
+	   (with-output-to-string (str)
+	     (format str "~a " (factor-of unit))
+	     (print-unit-vector (units-of unit) str))))
+      (format stream "~a" unit-description))))
 
 (defmethod make-load-form ((unit unit) &optional environment)
   (declare (ignore environment))
