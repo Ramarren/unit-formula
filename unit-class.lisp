@@ -28,7 +28,7 @@
 (defmethod initialize-instance :after ((unit unit) &rest initargs)
   (declare (ignore initargs))
   (when (typep (factor-of unit) 'single-float)
-   (setf (factor-of unit) (float (factor-of unit) 0d0))))
+   (setf (factor-of unit) (float (rationalize (factor-of unit)) 0d0))))
 
 (defmethod print-object ((unit unit) stream)
   (print-unreadable-object (unit stream :type t :identity nil)
