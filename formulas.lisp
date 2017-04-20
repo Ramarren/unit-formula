@@ -23,8 +23,9 @@
 ;;; numbers, lists describing operation, or lists decribing numeric constanst with units
 
 (defparameter *operators* (make-hash-table))
+(defparameter *formulae* (make-hash-table))
 
-;; operator kinds are: :agree :multiply :divide :expt :sqrt :dimensionless
+;; operator kinds are: :agree :multiply :divide :expt :sqrt :dimensionless :formula
 (defmacro define-operators (&body operators)
   `(progn ,@(iter (for (ops kind) on operators by #'cddr)
 		  (appending
@@ -74,6 +75,8 @@
 	      (reduce-unit formula))
 	     ((gethash (car formula) *operators*)
 	      (cons (car formula) (mapcar (rcurry #'unitify-formula-terminals env) (cdr formula))))
+	     ((gethash (car formula) *formulae*)
+	      (cons (car formula) (mapcar (rcurry #'unitify-formula-terminals env) (cdr formula))))
 	     (t (error "Unkown operation ~a." (car formula)))))))
 
 (defun verify-formula (formula)
@@ -93,7 +96,7 @@
 			   (eql condition-unit :logical))
 		      true-result-unit
 		      (error "Units do not agree in ~a" formula)))))
-	  ((:agree :comparision :multiply :divide :expt :sqrt :dimensionless)
+	  ((:agree :comparision :multiply :divide :expt :sqrt :dimensionless :formula)
 	     (let ((args (mapcar #'verify-formula (cdr formula))))
 	       (case kind
 		 (:comparision (if (reduce #'same-unit-p args)
@@ -118,7 +121,10 @@
 		 (:dimensionless
 		    (if (every #'dimensionless-p args)
 			(car args)
-			(error "Operation ~a needs dimensionless arguments." formula))))))))))
+			(error "Operation ~a needs dimensionless arguments." formula)))
+		 (:formula
+		  (gethash (car formula) *formulae*)))))))))
+
 
 ;;; formula variables and constant are described by (name unit &optional value)
 (defun make-formula-environment (variable-specs)
@@ -134,20 +140,40 @@
 				   :name name
 				   :value value))))))))
 
-(defun replace-formula-terminals (formula)
+(defun replace-formula-terminals (formula &key (in-formula nil))
   "Take unitified environment and transform it into list passable to defun, with all units conversions in place."
   (etypecase formula
     (variable-with-unit
-       (if (value-of formula)
-	   (* (value-of formula) (factor-of formula))
-	   (if (= (factor-of formula) 1)
-	       (name-of formula)
-	       `(* ,(factor-of formula) ,(name-of formula)))))
+     (if in-formula
+	 (if (value-of formula)
+	     ;; If we have a value then we can make a unit using that value.
+	     (make-instance 'unit
+			    :factor (* (value-of formula) (factor-of formula))
+			    :units (units-of formula))
+	     ;; If we don't have a value then a variable will provide the value down the road.
+	     `(make-instance 'unit
+			     :factor (* ,(factor-of formula) ,(name-of formula))
+			     :units ,(units-of formula)))
+	 (if (value-of formula)
+	     (* (value-of formula) (factor-of formula))
+	     (if (= (factor-of formula) 1)
+		 (name-of formula)
+		 `(* ,(factor-of formula) ,(name-of formula))))))
     (unit
-       (factor-of formula))
+     (factor-of formula))
     (list
-       (cons (car formula)
-	     (mapcar #'replace-formula-terminals (cdr formula))))))
+     (let ((formulae (gethash (car formula) *formulae*)))
+       (if formulae
+	   ;; Call the formula with arguments that reference the provided variables... finally
+	   ;; call convert-unit to return the results as a value for further processing.  Kind of
+	   ;; convoluted, but it should work for now.
+	   `(convert-unit ,(cons (car formula)
+				 (mapcar #'(lambda (f) (replace-formula-terminals f :in-formula t))
+					 (cdr formula)))
+			  ;; Maybe there is an easier way to specify the unit of the final value.
+			  ,(make-instance 'unit :factor 1 :units (units-of formulae)))
+	   (cons (car formula)
+		 (mapcar #'replace-formula-terminals (cdr formula))))))))
 
 ;;; in-spec defines variables and constant with which formula is described defformula creates a
 ;;; function which takes arguments in forms (name value &optional unit), converts them, checks if
@@ -215,3 +241,25 @@ is passed it will still fail, because symbol will be passed to the formula."
 				       ,@(iter (for (arg unit) in arglist)
 					       (collect `(convert-unit ,arg ,unit))))
 			      :units ,formula-units))))))))
+
+(defmacro defformulae* (name (&rest in-spec) formula-expression)
+  "This creates a formula using positional arguments, with much less error checking. If wrong unit
+is passed it will still fail, because symbol will be passed to the formula.  Formula-expression
+allows for nesting of formulas."
+  (let* ((arglist (strip-constants-from-spec in-spec))
+	 (env (make-formula-environment in-spec))
+	 (formula (unitify-formula-terminals formula-expression env))
+	 (verified-units (verify-formula formula))
+	 (formula-units (units-of verified-units)))
+    (with-gensyms (internal-function)
+      `(prog1
+	   (defun ,name ,(mapcar #'car arglist)
+	     (labels ((,internal-function ,(mapcar #'car arglist)
+			,(replace-formula-terminals formula)))
+	       (make-instance 'unit
+			      :factor (,internal-function
+				       ,@(iter (for (arg unit) in arglist)
+					       (collect `(convert-unit ,arg ,unit))))
+			      :units ,formula-units)))
+	 (setf (gethash ',name *operators*) :formula
+	       (gethash ',name *formulae*) ',verified-units)))))
