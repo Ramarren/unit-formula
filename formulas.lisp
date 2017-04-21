@@ -73,9 +73,8 @@
     (list
        (cond ((numberp (car formula))
 	      (reduce-unit formula))
-	     ((gethash (car formula) *operators*)
-	      (cons (car formula) (mapcar (rcurry #'unitify-formula-terminals env) (cdr formula))))
-	     ((gethash (car formula) *formulae*)
+	     ((or (gethash (car formula) *operators*)
+		  (gethash (car formula) *formulae*)) 
 	      (cons (car formula) (mapcar (rcurry #'unitify-formula-terminals env) (cdr formula))))
 	     (t (error "Unkown operation ~a." (car formula)))))))
 
@@ -162,18 +161,16 @@
     (unit
      (factor-of formula))
     (list
-     (let ((formulae (gethash (car formula) *formulae*)))
+     (let* ((formulae (gethash (car formula) *formulae*))
+	    (replaced
+	     (cons (car formula)
+		   (mapcar #'(lambda (f)
+			       (replace-formula-terminals f
+							  :in-formula formulae))
+			   (cdr formula)))))
        (if formulae
-	   ;; Call the formula with arguments that reference the provided variables... finally
-	   ;; call convert-unit to return the results as a value for further processing.  Kind of
-	   ;; convoluted, but it should work for now.
-	   `(convert-unit ,(cons (car formula)
-				 (mapcar #'(lambda (f) (replace-formula-terminals f :in-formula t))
-					 (cdr formula)))
-			  ;; Maybe there is an easier way to specify the unit of the final value.
-			  ,(make-instance 'unit :factor 1 :units (units-of formulae)))
-	   (cons (car formula)
-		 (mapcar #'replace-formula-terminals (cdr formula))))))))
+	   `(factor-of ,replaced)
+	   replaced)))))
 
 ;;; in-spec defines variables and constant with which formula is described defformula creates a
 ;;; function which takes arguments in forms (name value &optional unit), converts them, checks if
