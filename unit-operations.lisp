@@ -18,8 +18,26 @@
 
 (in-package :unit-formulas)
 
-;;; units are described by s-expressions, with operations: * / expt sqrt
+;;; units are described by s-expressions, with operations: + - * / expt sqrt
 ;;; * is implied if car of a list is other symbol
+
+(defun add-units (units)
+  (let ((same-units-p (reduce #'same-unit-p
+			      (remove-if #'dimensionless-p units))))
+    (if (and (cdr units) same-units-p)
+	(make-instance 'unit
+		       :factor (reduce #'+ (mapcar #'factor-of units))
+		       :units (units-of same-units-p))
+	(car units))))
+
+(defun subtract-units (units)
+  (let ((same-units-p (reduce #'same-unit-p
+			      (remove-if #'dimensionless-p units))))
+    (if (and (cdr units) same-units-p)
+	(make-instance 'unit
+		       :factor (reduce #'- (mapcar #'factor-of units))
+		       :units (units-of same-units-p))
+	(car units))))
 
 (defun multiply-units (units)
   (if (cdr units)
@@ -78,6 +96,8 @@
        (if substitution substitution (error "Unknown unit ~a" unit-description))))
     (list
      (case (car unit-description)
+       (+ (add-units (mapcar #'reduce-unit (cdr unit-description))))
+       (- (subtract-units (mapcar #'reduce-unit (cdr unit-description))))
        (* (multiply-units (mapcar #'reduce-unit (cdr unit-description))))
        (/ (divide-units (mapcar #'reduce-unit (cdr unit-description))))
        (expt (expt-units (reduce-unit (cadr unit-description)) (caddr unit-description)))
