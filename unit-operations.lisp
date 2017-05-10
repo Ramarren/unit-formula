@@ -21,11 +21,20 @@
 ;;; units are described by s-expressions, with operations: + - * / expt sqrt
 ;;; * is implied if car of a list is other symbol
 
+(defclass additive-unit (unit)
+  ()
+  (:documentation
+   "A class to represent additive unit definitions"))
+(defclass subtractive-unit (unit)
+  ()
+  (:documentation
+   "A class to represent subractive unit definitions."))
+
 (defun add-units (units)
   (let ((same-units-p (reduce #'same-unit-p
 			      (remove-if #'dimensionless-p units))))
     (if (and (cdr units) same-units-p)
-	(make-instance 'unit
+	(make-instance 'additive-unit
 		       :factor (reduce #'+ (mapcar #'factor-of units))
 		       :units (units-of same-units-p))
 	(car units))))
@@ -34,7 +43,7 @@
   (let ((same-units-p (reduce #'same-unit-p
 			      (remove-if #'dimensionless-p units))))
     (if (and (cdr units) same-units-p)
-	(make-instance 'unit
+	(make-instance 'additive-unit
 		       :factor (reduce #'- (mapcar #'factor-of units))
 		       :units (units-of same-units-p))
 	(car units))))
@@ -102,7 +111,12 @@
        (/ (divide-units (mapcar #'reduce-unit (cdr unit-description))))
        (expt (expt-units (reduce-unit (cadr unit-description)) (caddr unit-description)))
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
-       (t (multiply-units (mapcar #'reduce-unit unit-description)))))))
+       (t (let ((units (mapcar #'reduce-unit unit-description)))
+	    (cond ((some #'(lambda (u) (typep u 'additive-unit)) units)
+		   (add-units units))
+		  ((some #'(lambda (u) (typep u 'subtractive-unit)) units)
+		   (subtract-units units))	  
+		  (t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
   "Makes an unit object with value and unit description. The second one is not evaluated."
