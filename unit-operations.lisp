@@ -43,7 +43,7 @@
   (let ((same-units-p (reduce #'same-unit-p
 			      (remove-if #'dimensionless-p units))))
     (if (and (cdr units) same-units-p)
-	(make-instance 'additive-unit
+	(make-instance 'subtractive-unit
 		       :factor (reduce #'- (mapcar #'factor-of units))
 		       :units (units-of same-units-p))
 	(car units))))
@@ -115,7 +115,7 @@
 	    (cond ((some #'(lambda (u) (typep u 'additive-unit)) units)
 		   (add-units units))
 		  ((some #'(lambda (u) (typep u 'subtractive-unit)) units)
-		   (subtract-units units))	  
+		   (subtract-units units))
 		  (t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
