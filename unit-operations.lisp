@@ -25,10 +25,6 @@
   ()
   (:documentation
    "A class to represent additive unit definitions"))
-(defclass subtractive-unit (unit)
-  ()
-  (:documentation
-   "A class to represent subractive unit definitions."))
 
 (defun add-units (units)
   (let ((same-units-p (reduce #'same-unit-p
@@ -43,7 +39,7 @@
   (let ((same-units-p (reduce #'same-unit-p
 			      (remove-if #'dimensionless-p units))))
     (if (and (cdr units) same-units-p)
-	(make-instance 'subtractive-unit
+	(make-instance 'additive-unit
 		       :factor (reduce #'- (mapcar #'factor-of units))
 		       :units (units-of same-units-p))
 	(car units))))
@@ -114,8 +110,6 @@
        (t (let ((units (mapcar #'reduce-unit unit-description)))
 	    (cond ((some #'(lambda (u) (typep u 'additive-unit)) units)
 		   (add-units units))
-		  ((some #'(lambda (u) (typep u 'subtractive-unit)) units)
-		   (subtract-units units))
 		  (t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
