@@ -94,23 +94,30 @@
     (number
      (make-instance 'unit :factor unit-description))
     (symbol
-     (let ((substitution
-	    (gethash (find-symbol (symbol-name unit-description)
-				  (load-time-value (find-package :unit-formulas) t))
-		     *units*)))
-       (if substitution substitution (error "Unknown unit ~a" unit-description))))
+     (let ((symbol
+	    (find-symbol (symbol-name unit-description)
+			 (load-time-value (find-package :unit-formulas) t))))
+       (cond ((gethash symbol *units*))
+	     ((gethash symbol *operators*) (symbol-function symbol))
+	     (t (error "Unknown unit ~a" unit-description)))))
     (list
      (case (car unit-description)
        (+ (add-units (mapcar #'reduce-unit (cdr unit-description))))
        (- (subtract-units (mapcar #'reduce-unit (cdr unit-description))))
        (* (multiply-units (mapcar #'reduce-unit (cdr unit-description))))
        (/ (divide-units (mapcar #'reduce-unit (cdr unit-description))))
-       (expt (expt-units (reduce-unit (cadr unit-description)) (caddr unit-description)))
+       (expt (expt-units (reduce-unit (cadr unit-description))
+			 (caddr unit-description)))
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
-       (t (let ((units (mapcar #'reduce-unit unit-description)))
-	    (cond ((some #'(lambda (u) (typep u 'additive-unit)) units)
-		   (add-units units))
-		  (t (multiply-units units)))))))))
+       (t
+	(let* ((units (mapcar #'reduce-unit unit-description))
+	       (formula (find-if #'functionp units)))
+	  (cond (formula
+		 ;; formula must have dimensionless units in it's definition.
+		 (apply formula (remove formula units)))
+		((some #'(lambda (u) (typep u 'additive-unit)) units)
+		 (add-units units))
+		(t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
   "Makes an unit object with value and unit description. The second one is not evaluated."

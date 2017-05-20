@@ -22,9 +22,6 @@
 ;;; terminals are either symbols naming variables, naming non-composite units, dimensionless
 ;;; numbers, lists describing operation, or lists decribing numeric constanst with units
 
-(defparameter *operators* (make-hash-table))
-(defparameter *formulae* (make-hash-table))
-
 ;; operator kinds are: :agree :multiply :divide :expt :sqrt :dimensionless :formula
 (defmacro define-operators (&body operators)
   `(progn ,@(iter (for (ops kind) on operators by #'cddr)

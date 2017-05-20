@@ -25,12 +25,15 @@
 	    unit-instance))
 
 (defmacro define-units (&rest unit-definitions)
-  `(progn ,@(iter (for (unit-names unit-definition) on unit-definitions by #'cddr)
+  `(progn ,@(iter (for (unit-names unit-definition)
+		       on unit-definitions by #'cddr)
 		  (collect
 		      `(let ((unit-instance (reduce-unit ',unit-definition)))
 			 (iter (for name in ',(ensure-list unit-names))
-			       (setf (gethash (intern (symbol-name name) (find-package :unit-formulas))
-					      *units*) unit-instance)))))))
+			       (setf (gethash
+				      (intern (symbol-name name)
+					      (find-package :unit-formulas))
+				      *units*) unit-instance)))))))
 
 (defmacro define-factors (unit &rest factor-definitions)
   `(define-units ,@(iter (for (factor-names factor) on factor-definitions by #'cddr)

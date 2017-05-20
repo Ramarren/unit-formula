@@ -25,8 +25,11 @@
     :components ((:file "package")
 		 (:file "unit-printer" :depends-on ("package"))
 		 (:file "unit-class" :depends-on ("package" "unit-printer"))
+		 (:file "formula-basics" :depends-on ("package"))
 		 (:file "unit-query" :depends-on ("package" "unit-class"))
-		 (:file "unit-definitions" :depends-on ("package" "unit-operations" "unit-class"))
-		 (:file "unit-operations" :depends-on ("package" "unit-class"))
+		 (:file "unit-definitions"
+			:depends-on ("package" "unit-operations" "unit-class"))
+		 (:file "unit-operations"
+			:depends-on ("package" "unit-class" "formula-basics"))
 		 (:file "unit-data" :depends-on ("package" "unit-definitions"))
 		 (:file "formulas" :depends-on ("package" "unit-operations" "unit-definitions"))))
