@@ -20,3 +20,19 @@
 (defparameter *operators* (make-hash-table))
 (defparameter *formulae* (make-hash-table))
 
+(defclass formula-unit (unit)
+  ((formula-to :accessor formula-to :initarg :formula-to)
+   (formula-from :accessor formula-from :initarg :formula-from)))
+
+(defmethod initialize-instance :after ((formula-unit formula-unit) &key)
+  (with-accessors ((units-of units-of)
+		   (formula-to formula-to)
+		   (formula-from formula-from))
+      formula-unit
+    (setf units-of
+	  (cond (formula-to (units-of (gethash formula-to *formulae*)))
+		(formula-from (units-of (gethash formula-from *formulae*)))
+		(t units-of)))))
+
+(defun formula-unit-p (unit)
+  (typep unit 'formula-unit))

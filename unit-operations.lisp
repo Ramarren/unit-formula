@@ -26,6 +26,9 @@
   (:documentation
    "A class to represent additive unit definitions"))
 
+(defun additive-unit-p (unit)
+  (typep unit 'additive-unit))
+
 (defun add-units (units)
   (let ((same-units-p (reduce #'same-unit-p
 			      (remove-if #'dimensionless-p units))))
@@ -98,7 +101,6 @@
 	    (find-symbol (symbol-name unit-description)
 			 (load-time-value (find-package :unit-formulas) t))))
        (cond ((gethash symbol *units*))
-	     ((gethash symbol *operators*) (symbol-function symbol))
 	     (t (error "Unknown unit ~a" unit-description)))))
     (list
      (case (car unit-description)
@@ -109,13 +111,14 @@
        (expt (expt-units (reduce-unit (cadr unit-description))
 			 (caddr unit-description)))
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
+       (formula-unit (apply #'make-instance unit-description))
        (t
 	(let* ((units (mapcar #'reduce-unit unit-description))
-	       (formula (find-if #'functionp units)))
+	       (formula (find-if #'formula-unit-p units)))
 	  (cond (formula
 		 ;; formula must have dimensionless units in it's definition.
-		 (apply formula (remove formula units)))
-		((some #'(lambda (u) (typep u 'additive-unit)) units)
+		 (apply (formula-to formula) (remove formula units)))
+		((some #'additive-unit-p units)
 		 (add-units units))
 		(t (multiply-units units)))))))))
 
@@ -138,10 +141,17 @@
   (let ((unit-from (reduce-unit unit-from))
 	(unit-to (reduce-unit unit-to)))
     (if (same-unit-p unit-from unit-to)
-	(/ (factor-of unit-from) (factor-of unit-to))
+	(cond ((formula-unit-p unit-to)
+	       (factor-of (funcall (formula-from unit-to) unit-from)))
+	      ((or (additive-unit-p unit-from)
+		   (additive-unit-p unit-to))
+	       (- (factor-of unit-from) (factor-of unit-to)))
+	      (t (/ (factor-of unit-from) (factor-of unit-to))))
 	(case *convert-unit-behaviour*
-	  (:error (error "Invalid conversion between ~a and ~a" unit-from unit-to))
-	  (:warn  (warn "Invalid conversion between ~a and ~a" unit-from unit-to)
-	     :incorrect-conversion)
+	  (:error
+	   (error "Invalid conversion between ~a and ~a" unit-from unit-to))
+	  (:warn
+	   (warn "Invalid conversion between ~a and ~a" unit-from unit-to)
+	   :incorrect-conversion)
 	  (t
 	   :incorrect-conversion)))))
