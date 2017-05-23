@@ -138,7 +138,7 @@
 (defparameter *convert-unit-behaviour* :error)
 
 (defun convert-unit (unit-from unit-to)
-  (let ((unit-from (reduce-unit unit-from))
+  (let ((unit-from (reduce-unit `(* ,unit-from 1)))
 	(unit-to (reduce-unit unit-to)))
     (if (same-unit-p unit-from unit-to)
 	(cond ((formula-unit-p unit-to)
