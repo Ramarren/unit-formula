@@ -19,9 +19,9 @@ This is not yet well tested. Any comments are welcome.
 Units are described by s-expression. Units are identified by symbols, but interpreted by symbol
 name, so the package is irrelevant. There is significant number of units already defined in
 unit-data.lisp, check there or keys of `units-formula::*units*` hashtable for a list. Units can be
-constructed from those by use of `*` `/` `expt` `sqrt` operators. In a list with a unit name as
-first element `*` is implied. Numbers might be included in unit definition, they will be combined
-into contant factor.
+constructed from those by use of `*` `/` `expt` `sqrt` & `formula` operators. In a list with a unit
+name as first element `*` is implied. Numbers might be included in unit definition, they will be
+combined into contant factor.
 
 ## Reference
 
@@ -86,3 +86,45 @@ forming an unit.
 
 Function `identify-unit unit` tries to find a quantity with the same units, and if found returns a
 keyword naming it.
+
+Macro `defformula*` defines a formula using positional arguments, with much less error checking.  If
+the wrong units are passed it will still fail, because symbols will be checked by the formula.
+
+Macro `defformulae*` operates like defformula*, but formula-expression allows nesting of formulas
+defined using defformulae*.  This is useful if you have formulas based on other formulas.
+
+Macro `define-units` accepts unit-definitions as a list of ((unit-names) unit-definition) where
+unit-names is a list of synonyms for the unit and unit-definition defines a relationship to a base unit.
+The relationship definition can be a base-unit, a multiple of a base unit (ie. * / expt sqrt), or a
+list in the form of (formula :convert-to [formula-symbol-name] :convert-from [formula-symbol-name]).
+The latter defines the unit in terms of a formula defined by defformulae*, which allows for more
+complex unit definitions.
+
+Example:
+
+	CL-USER> (unit-formulas:defformulae* celsius-to-kelvin ((c unity))
+	   (* (+ c 273.15) kelvin))
+	CELSIUS-TO-KELVIN
+	CL-USER> (unit-formulas:defformulae* kelvin-to-celsius ((k kelvin))
+	   (- k (273.15 kelvin)))
+	KELVIN-TO-CELSIUS
+
+
+	CL-USER> (unit-formulas:define-units ((celsius centigrade)
+	   (unit-formulas:formula :convert-to celsius-to-kelvin
+		                  :convert-from kelvin-to-celsius)))
+        NIL
+
+
+	CL-USER> (unit-formulas:convert-unit '(100 celsius) 'kelvin)
+	373.15d0
+	CL-USER> (unit-formulas:convert-unit '(0 kelvin) 'centigrade)
+	-273.15d0
+
+In the above example two formulae were defined.  The first allows a dimensionless unit to be
+converted into kelvin.  The second formula converts from kelvin back to celsius.  In the second
+case we are not concerned with units since `convert-unit` calls this formula and will be returning
+a unitless float.
+
+The third form defines two synonyms `celsius` and `centigrade` that are units that use our formulae
+to convert-to and from a base unit instead of the defaults, which are `*` and `/`.

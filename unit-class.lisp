@@ -20,15 +20,35 @@
 
 (defparameter *units* (make-hash-table))
 
+(defparameter *default-convert-to* '*
+  "The default operation used to convert to units, typically this is multiplication.")
+(defparameter *default-convert-from* '/
+  "The default operation used to convert from units, typically this is division.")
+(defparameter *formulae* (make-hash-table)
+  "A hashtable that holds a list of registred formulae.")
+
 (defclass unit ()
   ((factor :accessor factor-of :initform 1 :initarg :factor)
    (units :accessor units-of :initarg :units
-	  :initform (make-array (length *base-units*) :initial-element 0))))
+	  :initform (make-array (length *base-units*) :initial-element 0))
+   (convert-to :accessor convert-to
+	       :initform *default-convert-to*
+	       :initarg :convert-to)
+   (convert-from :accessor convert-from
+		 :initform *default-convert-from*
+		 :initarg :convert-from)))
 
-(defmethod initialize-instance :after ((unit unit) &rest initargs)
-  (declare (ignore initargs))
-  (when (typep (factor-of unit) 'single-float)
-   (setf (factor-of unit) (float (rationalize (factor-of unit)) 0d0))))
+(defmethod initialize-instance :after ((unit unit) &key)
+  (with-accessors ((factor-of factor-of)
+		   (units-of units-of)
+		   (convert-to convert-to)
+		   (convert-from convert-from))
+      unit
+    (when (typep factor-of 'single-float)
+      (setf factor-of (float (rationalize factor-of) 0d0)))
+    (let ((to (gethash convert-to *formulae*)))
+      (when to
+	(setf units-of (units-of to))))))
 
 (defmethod print-object ((unit unit) stream)
   (print-unreadable-object (unit stream :type t :identity nil)
@@ -40,5 +60,16 @@
 
 (defmethod make-load-form ((unit unit) &optional environment)
   (declare (ignore environment))
-  `(make-instance 'unit :factor ,(factor-of unit)
-		        :units ,(units-of unit)))
+  `(make-instance 'unit
+		  :factor ,(factor-of unit)
+		  :units ,(units-of unit)
+		  :convert-to ',(convert-to unit)
+		  :convert-from ',(convert-from unit)))
+
+(defmethod formula-unit-p ((unit unit))
+  (not (and (equal (convert-to unit) *default-convert-to*)
+	    (equal (convert-from unit) *default-convert-from*))))
+
+(defmethod additive-unit-p ((unit unit))
+  (and (equal (convert-to unit) '+)
+       (equal (convert-from unit) '-)))

@@ -23,6 +23,8 @@
 ;;; numbers, lists describing operation, or lists decribing numeric constanst with units
 
 ;; operator kinds are: :agree :multiply :divide :expt :sqrt :dimensionless :formula
+(defparameter *operators* (make-hash-table))
+
 (defmacro define-operators (&body operators)
   `(progn ,@(iter (for (ops kind) on operators by #'cddr)
 		  (appending
@@ -120,7 +122,6 @@
 			(error "Operation ~a needs dimensionless arguments." formula)))
 		 (:formula
 		  (gethash (car formula) *formulae*)))))))))
-
 
 ;;; formula variables and constant are described by (name unit &optional value)
 (defun make-formula-environment (variable-specs)

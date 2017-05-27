@@ -21,31 +21,25 @@
 ;;; units are described by s-expressions, with operations: + - * / expt sqrt
 ;;; * is implied if car of a list is other symbol
 
-(defclass additive-unit (unit)
-  ()
-  (:documentation
-   "A class to represent additive unit definitions"))
-
-(defun additive-unit-p (unit)
-  (typep unit 'additive-unit))
-
 (defun add-units (units)
-  (let ((same-units-p (reduce #'same-unit-p
-			      (remove-if #'dimensionless-p units))))
-    (if (and (cdr units) same-units-p)
-	(make-instance 'additive-unit
-		       :factor (reduce #'+ (mapcar #'factor-of units))
-		       :units (units-of same-units-p))
-	(car units))))
+  (let ((same-units-p (reduce #'same-unit-p units)))
+    (if same-units-p
+	(if (cdr units)
+	    (make-instance 'unit
+			   :factor (reduce #'+ (mapcar #'factor-of units))
+			   :units (units-of same-units-p)))
+	(car units))
+    (error "Cannot add units of differing dimensions.")))
 
 (defun subtract-units (units)
-  (let ((same-units-p (reduce #'same-unit-p
-			      (remove-if #'dimensionless-p units))))
-    (if (and (cdr units) same-units-p)
-	(make-instance 'additive-unit
-		       :factor (reduce #'- (mapcar #'factor-of units))
-		       :units (units-of same-units-p))
-	(car units))))
+  (let ((same-units-p (reduce #'same-unit-p units)))
+    (if same-units-p
+	(if (cdr units)
+	    (make-instance 'unit
+			   :factor (reduce #'- (mapcar #'factor-of units))
+			   :units (units-of same-units-p))
+	    (car units))
+	(error "Cannot substract units of differing dimensions."))))
 
 (defun multiply-units (units)
   (if (cdr units)
@@ -111,15 +105,14 @@
        (expt (expt-units (reduce-unit (cadr unit-description))
 			 (caddr unit-description)))
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
-       (formula-unit (apply #'make-instance unit-description))
+       (formula (apply #'make-instance 'unit (cdr unit-description)))
        (t
 	(let* ((units (mapcar #'reduce-unit unit-description))
 	       (formula (find-if #'formula-unit-p units)))
 	  (cond (formula
 		 ;; formula must have dimensionless units in it's definition.
-		 (apply (formula-to formula) (remove formula units)))
-		((some #'additive-unit-p units)
-		 (add-units units))
+		 (apply (symbol-function (convert-to formula))
+			(remove formula units)))
 		(t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
@@ -127,26 +120,35 @@
   (let ((unit-prototype (reduce-unit unit-description)))
     (if (numberp value)
 	(make-instance 'unit
-		       :factor (* (factor-of unit-prototype) value)
-		       :units (units-of unit-prototype))
+		       :factor (funcall
+				(symbol-function (convert-to unit-prototype))
+				(factor-of unit-prototype)
+				value)
+		       :units (units-of unit-prototype)
+		       :convert-to (convert-to unit-prototype)
+		       :convert-from (convert-from unit-prototype))
 	`(make-instance 'unit
 			:factor ,(if (= (factor-of unit-prototype) 1)
 				     value
-				     `(* ,(factor-of unit-prototype) ,value))
-			:units ,(units-of unit-prototype)))))
+				     `(,(convert-to unit-prototype)
+					,(factor-of unit-prototype)
+					,value))
+			:units ,(units-of unit-prototype)
+			:convert-to ,(convert-to unit-prototype)
+			:convert-from ,(convert-from unit-prototype)))))
 
 (defparameter *convert-unit-behaviour* :error)
 
 (defun convert-unit (unit-from unit-to)
-  (let ((unit-from (reduce-unit `(* ,unit-from 1)))
-	(unit-to (reduce-unit unit-to)))
+  (let* ((unit-from (reduce-unit unit-from))
+	 (unit-to (reduce-unit unit-to))
+	 (convert-func (symbol-function (convert-from unit-to))))
     (if (same-unit-p unit-from unit-to)
 	(cond ((formula-unit-p unit-to)
-	       (factor-of (funcall (formula-from unit-to) unit-from)))
-	      ((or (additive-unit-p unit-from)
-		   (additive-unit-p unit-to))
-	       (- (factor-of unit-from) (factor-of unit-to)))
-	      (t (/ (factor-of unit-from) (factor-of unit-to))))
+	       (factor-of (funcall convert-func unit-from)))
+	      (t (funcall convert-func
+			  (factor-of unit-from)
+			  (factor-of unit-to))))
 	(case *convert-unit-behaviour*
 	  (:error
 	   (error "Invalid conversion between ~a and ~a" unit-from unit-to))
