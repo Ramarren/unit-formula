@@ -128,3 +128,21 @@ a unitless float.
 
 The third form defines two synonyms `celsius` and `centigrade` that are units that use our formulae
 to convert-to and from a base unit instead of the defaults, which are `*` and `/`.
+
+Function `transform-units` defines a generic-function that accepts an `input-unit`, an `output-unit`, and a `unit-bag` list of available units to use in performing dimensional analysis, converting the input-unit to a value in the input unit.  This is a basic implementation and is far from optimized, but should work for all cases.
+
+Example:
+
+	UNIT-FORMULAS> 	(defvar *molar-mass-of-water*
+			  (reduce-unit '(18.01528 (/ grams mol))))
+			(defvar *density-of-water*
+  	  		  (reduce-unit '(1 (/ gram mL))))
+
+			(transform-units '(100 gallons)
+		   			 'moles
+		   			 (list *density-of-water*
+			 		       *molar-mass-of-water*))
+
+	21012.228153913533d0
+	UNIT-FORMULAS> 
+

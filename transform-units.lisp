@@ -64,7 +64,7 @@ units necessary to reach the requested OUTPUT-UNIT.")
 		     :missing-units-of desired-vector))))))
 
 (defun subtract-unit-vectors (vector1 vector2)
-  "SUBTRACT-UNIT-VECTORS, subtracts two vectors"
+  "SUBTRACT-UNIT-VECTORS, subtracts each index of two vectors"
   (assert (and (vectorp vector1) (vectorp vector2)))
   (map 'vector #'- vector1 vector2))
 
@@ -85,7 +85,7 @@ units necessary to reach the requested OUTPUT-UNIT.")
     (invert-unit (reduce-unit unit))))
 
 (defun bag-units (unit-bag)
-  "Preps the list UNIT-BAG for use by reducing all units and inverted units.
+  "Preps the list UNIT-BAG for use by reducing all units and their inversions.
 Returns multiple values consisting of dimensioned and dimensionless units."
   (assert (listp unit-bag))
   (let ((dimensioned ())
@@ -103,11 +103,15 @@ Returns multiple values consisting of dimensioned and dimensionless units."
     (values dimensioned dimensionless)))
 
 (defun score-unit (unit-vector unit)
+  "Returns an integer representing the complexity of the unit compared with
+unit-vector.  The unit with the lowest score cancles more of the unit-vector."
   (let ((cancled-units (subtract-unit-vectors unit-vector (units-of unit))))
     (reduce #'(lambda (a b) (+ (abs a) (abs b))) 
 	    cancled-units)))
 
 (defun find-best-unit-match (unit-vector unit-bag)
+  "Loops over the unit-bag checking the score of the unit and returns the
+unit with the lowest score."
   (loop with max = most-positive-fixnum
      with lowest-match = nil
      for unit in unit-bag
