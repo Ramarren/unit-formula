@@ -22,4 +22,4 @@
 		     :defformulae* :define-operators :define-units 
 		     :query-unit :identify-unit :make-unit
 		     #:*convert-unit-behaviour* :formula :unit
-		     :transform-units))
+		     :transform-units :invert-unit))
