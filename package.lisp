@@ -21,4 +21,5 @@
 		     :dimensionless-p :defformula :defformula*
 		     :defformulae* :define-operators :define-units 
 		     :query-unit :identify-unit :make-unit
-		     #:*convert-unit-behaviour* :formula :unit))
+		     #:*convert-unit-behaviour* :formula :unit
+		     :transform-units))
