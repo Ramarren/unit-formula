@@ -1,33 +1,33 @@
 (in-package :unit-formulas)
 
-(define-condition incomplete-unit-conversion (error)
-  ((input-unit :reader incomplete-unit-conversion-input-unit
+(define-condition incomplete-unit-transformation (error)
+  ((input-unit :reader incomplete-unit-transformation-input-unit
 	       :initarg :input-unit
 	       :initform nil)
-   (output-unit :reader incomplete-unit-conversion-output-unit
+   (output-unit :reader incomplete-unit-transformation-output-unit
 		:initarg :output-unit
 		:initform nil)
-   (missing-units-of :reader incomplete-unit-conversion-missing-units-of
+   (missing-units-of :reader incomplete-unit-transformation-missing-units-of
 		     :initarg :missing-units-of))
-  (:report (lambda (iuc s)
+  (:report (lambda (iut s)
 	     (format s
 		     "Incomplete unit transformation.  Cannot cancle out the following units: '~A'~@[ with input-unit of '~A'~]~@[ to output-unit of '~A'~]."
 		     (with-output-to-string (uv)
 		       (print-unit-vector
-			(incomplete-unit-conversion-missing-units-of iuc)
+			(incomplete-unit-transformation-missing-units-of iut)
 			uv))
-		     (incomplete-unit-conversion-input-unit iuc)
-		     (incomplete-unit-conversion-output-unit iuc)))))
+		     (incomplete-unit-transformation-input-unit iut)
+		     (incomplete-unit-transformation-output-unit iut)))))
 
 (defgeneric transform-units (input-unit output-unit unit-bag)
-  (:documentation "TRANSFORM-UNITS, a way of doing dimensional analysis on a set of units.  The idea here is that a grab bag of units (UNIT-BAG) can be supplied along with the input unit and desired output units.  Dimensional analysis will figure out which units are needed to complete the transformation from one set of units to another until the requested units are reached.  TRANSFORM-UNITS will create a condition if UNIT-BAG doesn't provide the required units to reach the requested unit.")
+  (:documentation "TRANSFORM-UNITS, a way of doing dimensional analysis on a set of units.  The idea here is that a grab bag of units (UNIT-BAG) can be supplied along with the input unit and desired output units.  Dimensional analysis will figure out which units are needed to complete the transformation from one set of units to another until the requested units are reached.  TRANSFORM-UNITS will create a condition of type INCOMPLETE-UNIT-TRANSFORMATION if UNIT-BAG doesn't provide the required units to reach the requested unit.")
   (:method ((input-unit unit) (output-unit unit) (unit-bag list))
     (multiple-value-bind (dimensioned dimensionless)
 	(bag-units unit-bag)
       (convert-unit
        (reduce-unit
 	`(* ,input-unit
-	    ,dimensionless
+	    ,@dimensionless
 	    ,@(find-best-units (subtract-unit-vectors (units-of output-unit)
 						      (units-of input-unit))
 			       dimensioned)))
@@ -43,7 +43,7 @@
 
 (defun find-best-units (desired-vector unit-bag &optional (depth (length unit-bag)))
   (if (< depth 0)
-      (error 'incomplete-unit-conversion
+      (error 'incomplete-unit-transformation
 	     :missing-units-of desired-vector)
       (unless (every #'zerop desired-vector)
 	(let ((unit (find-best-unit-match desired-vector unit-bag)))
@@ -53,7 +53,7 @@
 		     (subtract-unit-vectors desired-vector (units-of unit))
 		     (remove-if #'(lambda (u) (same-unit-p u unit)) unit-bag)
 		     (1- depth)))
-	      (error 'incomplete-unit-conversion
+	      (error 'incomplete-unit-transformation
 		     :missing-units-of desired-vector))))))
 
 (defun subtract-unit-vectors (vector1 vector2)
