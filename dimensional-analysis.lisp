@@ -20,7 +20,7 @@
 		     (incomplete-unit-conversion-output-unit iuc)))))
 
 (defgeneric transform-units (input-unit output-unit unit-bag)
-  (:documentation "TRANSFORM-UNITS, a way of doing dimensional analysis on a set of units.  The idea here is that a grab bag of units (UNIT-BAG) can be supplie along with the input unit and desired output units.  Dimensional analysis will figure out which units are needed to complete the transformation from one set of units to another until the requested units are reached.  TRANSFORM-UNITS will create a condition if UNIT-BAG doesn't provide the required units to reach the requested unit.")
+  (:documentation "TRANSFORM-UNITS, a way of doing dimensional analysis on a set of units.  The idea here is that a grab bag of units (UNIT-BAG) can be supplied along with the input unit and desired output units.  Dimensional analysis will figure out which units are needed to complete the transformation from one set of units to another until the requested units are reached.  TRANSFORM-UNITS will create a condition if UNIT-BAG doesn't provide the required units to reach the requested unit.")
   (:method ((input-unit unit) (output-unit unit) (unit-bag list))
     (multiple-value-bind (dimensioned dimensionless)
 	(bag-units unit-bag)
@@ -30,9 +30,8 @@
 	      (cons input-unit
 		    (append dimensionless
 			    (find-best-units
-			     (add-unit-vectors (units-of output-unit)
-					       (invert-unit-vector
-						(units-of input-unit)))
+			     (subtract-unit-vectors (units-of output-unit)
+						    (units-of input-unit))
 			     dimensioned)))))
        output-unit)))
   (:method ((input-unit list) output-unit unit-bag)
@@ -58,16 +57,6 @@
 		     (1- depth)))
 	      (error 'incomplete-unit-conversion
 		     :missing-units-of desired-vector))))))
-
-(defun collect-dimensionless-p (unit-bag)
-  (loop for unit in unit-bag
-       when (dimensionless-p unit)
-       collect unit))
-
-(defun add-unit-vectors (vector1 vector2)
-  "ADD-UNIT-VECTORS, adds two vectors."
-  (assert (and (vectorp vector1) (vectorp vector2)))
-  (map 'vector #'+ vector1 vector2))
 
 (defun subtract-unit-vectors (vector1 vector2)
   "SUBTRACT-UNIT-VECTORS, subtracts two vectors"
@@ -109,13 +98,12 @@ Returns multiple values consisting of dimensioned and dimensionless units."
     (values dimensioned dimensionless)))
 
 (defun score-unit (unit-vector unit)
-  (let ((cancled-units (add-unit-vectors unit-vector
-					 (invert-unit-vector (units-of unit)))))
+  (let ((cancled-units (subtract-unit-vectors unit-vector (units-of unit))))
     (reduce #'(lambda (a b) (+ (abs a) (abs b))) 
 	    cancled-units)))
 
 (defun find-best-unit-match (unit-vector unit-bag)
-  (loop with max = 100
+  (loop with max = most-postive-fixnum
      with lowest-match = nil
      for unit in unit-bag
      for score = (score-unit unit-vector unit)
