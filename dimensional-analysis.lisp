@@ -26,13 +26,11 @@
 	(bag-units unit-bag)
       (convert-unit
        (reduce-unit
-	(cons '*
-	      (cons input-unit
-		    (append dimensionless
-			    (find-best-units
-			     (subtract-unit-vectors (units-of output-unit)
-						    (units-of input-unit))
-			     dimensioned)))))
+	`(* ,input-unit
+	    ,dimensionless
+	    ,@(find-best-units (subtract-unit-vectors (units-of output-unit)
+						      (units-of input-unit))
+			       dimensioned)))
        output-unit)))
   (:method ((input-unit list) output-unit unit-bag)
     (transform-units (reduce-unit input-unit) output-unit unit-bag))
@@ -103,7 +101,7 @@ Returns multiple values consisting of dimensioned and dimensionless units."
 	    cancled-units)))
 
 (defun find-best-unit-match (unit-vector unit-bag)
-  (loop with max = most-postive-fixnum
+  (loop with max = most-positive-fixnum
      with lowest-match = nil
      for unit in unit-bag
      for score = (score-unit unit-vector unit)
