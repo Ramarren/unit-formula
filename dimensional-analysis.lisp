@@ -20,7 +20,14 @@
 		     (incomplete-unit-transformation-output-unit iut)))))
 
 (defgeneric transform-units (input-unit output-unit unit-bag)
-  (:documentation "TRANSFORM-UNITS, a way of doing dimensional analysis on a set of units.  The idea here is that a grab bag of units (UNIT-BAG) can be supplied along with the input unit and desired output units.  Dimensional analysis will figure out which units are needed to complete the transformation from one set of units to another until the requested units are reached.  TRANSFORM-UNITS will create a condition of type INCOMPLETE-UNIT-TRANSFORMATION if UNIT-BAG doesn't provide the required units to reach the requested unit.")
+  (:documentation
+"TRANSFORM-UNITS, a method of performing complex conversions on units.
+The concept is that a grab bag of units (UNIT-BAG) can be supplied as a 
+list along with an input unit and desired output unit.  TRANSFORM-UNITS 
+will calculate the needed transformation from the INPUT-UNITS to 
+OUTPUT-UNITS, using the provided units in UNIT-BAG.  TRANSFORM-UNITS creates
+a condition of type INCOMPLETE-UNIT-TRANSFORMATION if UNIT-BAG lacks the 
+units necessary to reach the requested OUTPUT-UNIT.")
   (:method ((input-unit unit) (output-unit unit) (unit-bag list))
     (multiple-value-bind (dimensioned dimensionless)
 	(bag-units unit-bag)
@@ -63,7 +70,7 @@
 
 (defun invert-unit-vector (unit)
   "Inverts the direction of all dimensions in a unit-vector."
-  (assert (and (vectorp unit)))
+  (assert (vectorp unit))
   (map 'vector #'- unit))
 
 (defgeneric invert-unit (unit)
