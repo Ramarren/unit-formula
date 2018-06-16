@@ -11,7 +11,7 @@
 		     :initarg :missing-units-of))
   (:report (lambda (iut s)
 	     (format s
-		     "Incomplete unit transformation.  Cannot cancle out the following units: '~A'~@[ with input-unit of '~A'~]~@[ to output-unit of '~A'~]."
+		     "Incomplete unit transformation.  Cannot cancel out the following units: '~A'~@[ with input-unit of '~A'~]~@[ to output-unit of '~A'~]."
 		     (with-output-to-string (uv)
 		       (print-unit-vector
 			(incomplete-unit-transformation-missing-units-of iut)
@@ -104,10 +104,10 @@ Returns multiple values consisting of dimensioned and dimensionless units."
 
 (defun score-unit (unit-vector unit)
   "Returns an integer representing the complexity of the unit compared with
-unit-vector.  The unit with the lowest score cancles more of the unit-vector."
-  (let ((cancled-units (subtract-unit-vectors unit-vector (units-of unit))))
+unit-vector.  The unit with the lowest score cancels more of the unit-vector."
+  (let ((canceled-units (subtract-unit-vectors unit-vector (units-of unit))))
     (reduce #'(lambda (a b) (+ (abs a) (abs b))) 
-	    cancled-units)))
+	    canceled-units)))
 
 (defun find-best-unit-match (unit-vector unit-bag)
   "Loops over the unit-bag checking the score of the unit and returns the
