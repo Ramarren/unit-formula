@@ -24,54 +24,54 @@
 (defun add-units (units)
   (let ((same-units-p (reduce #'same-unit-p units)))
     (if same-units-p
-	(if (cdr units)
-	    (make-instance 'unit
-			   :factor (reduce #'+ (mapcar #'factor-of units))
-			   :units (units-of same-units-p)))
-	(car units))
-    (error "Cannot add units of differing dimensions.")))
+        (if (cdr units)
+            (make-instance 'unit
+                           :factor (reduce #'+ (mapcar #'factor-of units))
+                           :units (units-of same-units-p))
+            (car units))
+        (error "Cannot add units of differing dimensions."))))
 
 (defun subtract-units (units)
   (let ((same-units-p (reduce #'same-unit-p units)))
     (if same-units-p
-	(if (cdr units)
-	    (make-instance 'unit
-			   :factor (reduce #'- (mapcar #'factor-of units))
-			   :units (units-of same-units-p))
-	    (car units))
-	(error "Cannot substract units of differing dimensions."))))
+        (if (cdr units)
+            (make-instance 'unit
+                           :factor (reduce #'- (mapcar #'factor-of units))
+                           :units (units-of same-units-p))
+            (car units))
+        (error "Cannot substract units of differing dimensions."))))
 
 (defun multiply-units (units)
   (if (cdr units)
       (make-instance 'unit
-		     :factor (reduce #'* (mapcar #'factor-of units))
-		     :units (apply #'map 'vector #'+ (mapcar #'units-of units)))
+                     :factor (reduce #'* (mapcar #'factor-of units))
+                     :units (apply #'map 'vector #'+ (mapcar #'units-of units)))
       (car units)))
 
 (defun divide-units (units)
   (if (cdr units)
       (make-instance 'unit
-		     :factor (reduce #'/ (mapcar #'factor-of units))
-		     :units (apply #'map 'vector #'- (mapcar #'units-of units)))
+                     :factor (reduce #'/ (mapcar #'factor-of units))
+                     :units (apply #'map 'vector #'- (mapcar #'units-of units)))
       (car units)))
 
 (defun expt-units (unit power)
   (check-type power (or integer ratio))
   (make-instance 'unit
-		 :factor (expt (factor-of unit) power)
-		 :units (map 'vector (curry #'* power) (units-of unit))))
+                 :factor (expt (factor-of unit) power)
+                 :units (map 'vector (curry #'* power) (units-of unit))))
 
 (defun sqrt-units (unit)
   (make-instance 'unit
-		 :factor (sqrt (factor-of unit))
-		 :units (map 'vector (rcurry #'/ 2) (units-of unit))))
+                 :factor (sqrt (factor-of unit))
+                 :units (map 'vector (rcurry #'/ 2) (units-of unit))))
 
 (defgeneric same-unit-p (unit1 unit2 &key factor)
   (:method ((unit1 unit) (unit2 unit) &key (factor nil))
     (when (and (every #'= (units-of unit1) (units-of unit2))
-	       (if factor
-		   (= (factor-of unit1) (factor-of unit2))
-		   t))
+               (if factor
+                   (= (factor-of unit1) (factor-of unit2))
+                   t))
       unit1))
   (:method ((unit1 t) (unit2 t) &key (factor nil))
     (same-unit-p (reduce-unit unit1) unit2 :factor factor))
@@ -92,10 +92,10 @@
      (make-instance 'unit :factor unit-description))
     (symbol
      (let ((symbol
-	    (find-symbol (symbol-name unit-description)
-			 (load-time-value (find-package :unit-formulas) t))))
+            (find-symbol (symbol-name unit-description)
+                         (load-time-value (find-package :unit-formulas) t))))
        (cond ((gethash symbol *units*))
-	     (t (error "Unknown unit ~a" unit-description)))))
+             (t (error "Unknown unit ~a" unit-description)))))
     (list
      (case (car unit-description)
        (+ (add-units (mapcar #'reduce-unit (cdr unit-description))))
@@ -103,57 +103,57 @@
        (* (multiply-units (mapcar #'reduce-unit (cdr unit-description))))
        (/ (divide-units (mapcar #'reduce-unit (cdr unit-description))))
        (expt (expt-units (reduce-unit (cadr unit-description))
-			 (caddr unit-description)))
+                         (caddr unit-description)))
        (sqrt (sqrt-units (reduce-unit (cadr unit-description))))
        (formula (apply #'make-instance 'unit (cdr unit-description)))
        (t
-	(let* ((units (mapcar #'reduce-unit unit-description))
-	       (formula (find-if #'formula-unit-p units)))
-	  (cond (formula
-		 ;; formula must have dimensionless units in it's definition.
-		 (apply (symbol-function (convert-to formula))
-			(remove formula units)))
-		(t (multiply-units units)))))))))
+        (let* ((units (mapcar #'reduce-unit unit-description))
+               (formula (find-if #'formula-unit-p units)))
+          (cond (formula
+                 ;; formula must have dimensionless units in it's definition.
+                 (apply (symbol-function (convert-to formula))
+                        (remove formula units)))
+                (t (multiply-units units)))))))))
 
 (defmacro make-unit (value unit-description)
   "Makes an unit object with value and unit description. The second one is not evaluated."
   (let ((unit-prototype (reduce-unit unit-description)))
     (if (numberp value)
-	(make-instance 'unit
-		       :factor (funcall
-				(symbol-function (convert-to unit-prototype))
-				(factor-of unit-prototype)
-				value)
-		       :units (units-of unit-prototype)
-		       :convert-to (convert-to unit-prototype)
-		       :convert-from (convert-from unit-prototype))
-	`(make-instance 'unit
-			:factor ,(if (= (factor-of unit-prototype) 1)
-				     value
-				     `(,(convert-to unit-prototype)
-					,(factor-of unit-prototype)
-					,value))
-			:units ,(units-of unit-prototype)
-			:convert-to ,(convert-to unit-prototype)
-			:convert-from ,(convert-from unit-prototype)))))
+        (make-instance 'unit
+                       :factor (funcall
+                                (symbol-function (convert-to unit-prototype))
+                                (factor-of unit-prototype)
+                                value)
+                       :units (units-of unit-prototype)
+                       :convert-to (convert-to unit-prototype)
+                       :convert-from (convert-from unit-prototype))
+        `(make-instance 'unit
+                        :factor ,(if (= (factor-of unit-prototype) 1)
+                                     value
+                                     `(,(convert-to unit-prototype)
+                                        ,(factor-of unit-prototype)
+                                        ,value))
+                        :units ,(units-of unit-prototype)
+                        :convert-to ,(convert-to unit-prototype)
+                        :convert-from ,(convert-from unit-prototype)))))
 
 (defparameter *convert-unit-behaviour* :error)
 
 (defun convert-unit (unit-from unit-to)
   (let* ((unit-from (reduce-unit unit-from))
-	 (unit-to (reduce-unit unit-to))
-	 (convert-func (symbol-function (convert-from unit-to))))
+         (unit-to (reduce-unit unit-to))
+         (convert-func (symbol-function (convert-from unit-to))))
     (if (same-unit-p unit-from unit-to)
-	(cond ((formula-unit-p unit-to)
-	       (factor-of (funcall convert-func unit-from)))
-	      (t (funcall convert-func
-			  (factor-of unit-from)
-			  (factor-of unit-to))))
-	(case *convert-unit-behaviour*
-	  (:error
-	   (error "Invalid conversion between ~a and ~a" unit-from unit-to))
-	  (:warn
-	   (warn "Invalid conversion between ~a and ~a" unit-from unit-to)
-	   :incorrect-conversion)
-	  (t
-	   :incorrect-conversion)))))
+        (cond ((formula-unit-p unit-to)
+               (factor-of (funcall convert-func unit-from)))
+              (t (funcall convert-func
+                          (factor-of unit-from)
+                          (factor-of unit-to))))
+        (case *convert-unit-behaviour*
+          (:error
+           (error "Invalid conversion between ~a and ~a" unit-from unit-to))
+          (:warn
+           (warn "Invalid conversion between ~a and ~a" unit-from unit-to)
+           :incorrect-conversion)
+          (t
+           :incorrect-conversion)))))
